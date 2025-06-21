@@ -1,7 +1,5 @@
 # GoCacheX
 
-# GoCacheX
-
 **GoCacheX** is a high-performance, concurrent, in-memory cache written in Go with:
 
 - 🔁 **LRU eviction**
