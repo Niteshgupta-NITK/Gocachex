@@ -24,19 +24,6 @@
 
 ---
 
-## 📂 Project Structure
-bash
-gocachex/
-├── main.go                   # Entry point + API
-├── go.mod
-├── cache/
-│   ├── lru.go                # LRU Cache logic + TTL
-│   ├── wal.go                # WAL: append + replay
-│   ├── shard.go              # Sharded cache controller
-├── utils/
-│   └── hasher.go             # Consistent hashing logic
-
----
 ## Architecture
 ```mermaid
 flowchart TD
