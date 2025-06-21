@@ -32,7 +32,7 @@ gocachex/
 │   └── hasher.go             # Consistent Hash Ring implementation
 └── go.mod                    # Go module definition
 
-
+mermaid
 flowchart TD
     A[main.go] --> B[ShardedCache]
     B --> C1[LRUCache shard1]
