@@ -18,21 +18,7 @@
 - ⚔️ Thread-safe via mutex locks
 
 ---
-
-## 📂 Project Structure
-
-```bash
-gocachex/
-├── main.go                   # Entry point with demo usage
-├── cache/
-│   ├── lru.go                # LRU Cache logic
-│   ├── wal.go                # Write-Ahead Logging system
-│   ├── shard.go              # Shard manager using consistent hashing
-├── utils/
-│   └── hasher.go             # Consistent Hash Ring implementation
-└── go.mod                    # Go module definition
-
-# Architecture
+## Architecture
 ```mermaid
 flowchart TD
     A[main.go] --> B[ShardedCache]
