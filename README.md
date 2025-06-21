@@ -1,30 +1,49 @@
 # GoCacheX
 
-**GoCacheX** is a multithreaded, in-memory key-value caching system built in Go, with support for:
+# GoCacheX
 
-- 🔁 **LRU (Least Recently Used) eviction**
-- 🧵 **Thread-safe access using sync primitives**
-- 💾 **Write-Ahead Logging (WAL)** for crash-safe persistence
-- ⚙️ **Consistent Hashing-based sharding** for horizontal scalability
+**GoCacheX** is a high-performance, concurrent, in-memory cache written in Go with:
+
+- 🔁 **LRU eviction**
+- ⏳ **TTL-based key expiry**
+- 🧵 **Thread-safe access (sync.Mutex, goroutines)**
+- 💾 **Write-Ahead Logging (WAL)** for persistence
+- ⚙️ **Consistent Hashing for sharding**
+- 🌐 **REST APIs** with Gin
 
 ---
 
-## 🛠️ Features
+## ✨ Features
 
-- 🚀 High performance in-memory storage
-- 🧠 LRU eviction using Go’s `container/list`
-- 📦 WAL for persistence and crash recovery
-- 🧮 Consistent hashing to distribute load across shards
-- ⚔️ Thread-safe via mutex locks
+- ⚡ Multi-shard LRU cache with automatic key expiration
+- 📦 WAL ensures crash recovery
+- 🛡️ Safe for concurrent access via Go’s sync primitives
+- 🧠 Sharded via consistent hashing (`crc32`)
+- 🧪 Gin APIs: `/set`, `/get/:key`, `/clear`
+- 🧱 Extensible architecture for adding metrics, auth, etc.
+
+---
+
+## 📂 Project Structure
+bash
+gocachex/
+├── main.go                   # Entry point + API
+├── go.mod
+├── cache/
+│   ├── lru.go                # LRU Cache logic + TTL
+│   ├── wal.go                # WAL: append + replay
+│   ├── shard.go              # Sharded cache controller
+├── utils/
+│   └── hasher.go             # Consistent hashing logic
 
 ---
 ## Architecture
 ```mermaid
 flowchart TD
     A[main.go] --> B[ShardedCache]
-    B --> C1[LRUCache shard1]
-    B --> C2[LRUCache shard2]
-    B --> C3[LRUCache shard3]
+    B --> C1[LRUCache: shard1]
+    B --> C2[LRUCache: shard2]
+    B --> C3[LRUCache: shard3]
     B --> D[ConsistentHashRing]
     B --> E[WAL Logger]
 
