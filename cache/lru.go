@@ -54,6 +54,13 @@ func (c *LRUCache) Set(key, value string) {
     }
 }
 
+func (c *LRUCache) Clear() {
+    c.mu.Lock()
+    defer c.mu.Unlock()
+    c.items = make(map[string]*list.Element)
+    c.evictList.Init()
+}
+
 func (c *LRUCache) removeOldest() {
     el := c.evictList.Back()
     if el != nil {

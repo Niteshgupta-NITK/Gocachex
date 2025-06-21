@@ -1,43 +1,58 @@
 package main
 
 import (
-    "fmt"
+    "github.com/gin-gonic/gin"
     "gocachex/cache"
-    "math/rand"
-    "sync"
-    "time"
+    "net/http"
 )
+
+var cacheInstance *cache.ShardedCache
+var wal *cache.WAL
 
 func main() {
     nodes := []string{"shard1", "shard2", "shard3"}
-    shardedCache := cache.NewShardedCache(nodes, 100)
+    cacheInstance = cache.NewShardedCache(nodes, 100)
 
-    wal, err := cache.NewWAL("wal.log")
+    var err error
+    wal, err = cache.NewWAL("wal.log")
     if err != nil {
         panic(err)
     }
     defer wal.Close()
 
-    var wg sync.WaitGroup
-    for i := 0; i < 10; i++ {
-        wg.Add(1)
-        go func(id int) {
-            defer wg.Done()
-            for j := 0; j < 100; j++ {
-                key := fmt.Sprintf("key-%d-%d", id, j)
-                value := fmt.Sprintf("value-%d-%d", id, j)
-                shardedCache.Set(key, value)
+    // Replay WAL to restore state
+    wal.Replay(cacheInstance)
 
-                // Log this write to WAL
-                if err := wal.LogSet(key, value); err != nil {
-                    fmt.Println("WAL write error:", err)
-                }
+    r := gin.Default()
 
-                time.Sleep(time.Millisecond * time.Duration(rand.Intn(10)))
-            }
-        }(i)
-    }
+    r.POST("/set", func(c *gin.Context) {
+        var json struct {
+            Key   string `json:"key"`
+            Value string `json:"value"`
+        }
+        if err := c.ShouldBindJSON(&json); err != nil {
+            c.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+            return
+        }
 
-    wg.Wait()
-    fmt.Println("All goroutines finished. Check wal.log for output.")
+        cacheInstance.Set(json.Key, json.Value)
+        wal.LogSet(json.Key, json.Value)
+        c.JSON(http.StatusOK, gin.H{"status": "success"})
+    })
+
+    r.GET("/get/:key", func(c *gin.Context) {
+        key := c.Param("key")
+        if val, ok := cacheInstance.Get(key); ok {
+            c.JSON(http.StatusOK, gin.H{"key": key, "value": val})
+        } else {
+            c.JSON(http.StatusNotFound, gin.H{"error": "key not found"})
+        }
+    })
+
+    r.POST("/clear", func(c *gin.Context) {
+        cacheInstance.Clear()
+        c.JSON(http.StatusOK, gin.H{"status": "cache cleared"})
+    })
+
+    r.Run(":8080")
 }

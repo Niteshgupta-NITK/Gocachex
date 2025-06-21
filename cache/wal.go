@@ -4,6 +4,7 @@ import (
     "bufio"
     "fmt"
     "os"
+    "strings"
     "sync"
 )
 
@@ -24,13 +25,31 @@ func NewWAL(path string) (*WAL, error) {
 func (w *WAL) LogSet(key, value string) error {
     w.mu.Lock()
     defer w.mu.Unlock()
-
-    logLine := fmt.Sprintf("SET %s %s\n", key, value)
-    _, err := w.writer.WriteString(logLine)
+    _, err := w.writer.WriteString(fmt.Sprintf("SET %s %s\n", key, value))
     if err != nil {
         return err
     }
     return w.writer.Flush()
+}
+
+func (w *WAL) Replay(sc *ShardedCache) error {
+    f, err := os.Open(w.file.Name())
+    if err != nil {
+        return err
+    }
+    defer f.Close()
+
+    scanner := bufio.NewScanner(f)
+    for scanner.Scan() {
+        line := scanner.Text()
+        if strings.HasPrefix(line, "SET") {
+            parts := strings.SplitN(line, " ", 3)
+            if len(parts) == 3 {
+                sc.Set(parts[1], parts[2])
+            }
+        }
+    }
+    return scanner.Err()
 }
 
 func (w *WAL) Close() error {

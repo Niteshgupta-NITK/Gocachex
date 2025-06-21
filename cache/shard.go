@@ -1,8 +1,6 @@
 package cache
 
-import (
-    "gocachex/utils"
-)
+import "gocachex/utils"
 
 type ShardedCache struct {
     shards map[string]*LRUCache
@@ -28,4 +26,10 @@ func (s *ShardedCache) Set(key, value string) {
 func (s *ShardedCache) Get(key string) (string, bool) {
     node := s.ring.GetNode(key)
     return s.shards[node].Get(key)
+}
+
+func (s *ShardedCache) Clear() {
+    for _, shard := range s.shards {
+        shard.Clear()
+    }
 }
